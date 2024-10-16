@@ -1,0 +1,36 @@
+<!-- templates/success.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submission Successful</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="success-container">
+        <div class="success-header">
+            Thank You!
+        </div>
+        
+        <div class="success-message">
+            Your details have been submitted successfully.
+        </div>
+
+        <div class="detail-summary">
+            <strong>Submitted Details:</strong><br>
+            <strong>Name:</strong> {{ detail.name }}<br>
+            <strong>Services Provided:</strong> {{ detail.services }}<br>
+            <strong>Available Area:</strong> {{ detail.area }}<br>
+            <strong>Phone Number:</strong> {{ detail.phone }}<br>
+            <strong>Fee:</strong> {{ detail.fee }}<br>
+            <strong>Subscription Plan:</strong> {{ detail.subscription }}<br>
+            <strong>Rating:</strong> {{ detail.rating }} ⭐<br>
+            <strong>Booking Option:</strong> {{ detail.booking_option }}<br>
+        </div>
+        
+        <button class="back-button" onclick="window.location.href='{{ url_for('index') }}'">Back to Form</button>
+        <button class="back-button" onclick="window.location.href='{{ url_for('details_page') }}'">View Details</button>
+    </div>
+</body>
+</html>
