@@ -14,12 +14,12 @@ def home():
 
     if query:
         # Search the service provider details
-        c.execute('''SELECT name, service_name, area, phone, amount, rating, comment, booking_option FROM service_providers 
+        c.execute('''SELECT name, service_name, area, phone, amount, comment, booking_option FROM service_providers 
                      WHERE name LIKE ? OR service_name LIKE ? OR area LIKE ?''', 
                      ('%' + query + '%', '%' + query + '%', '%' + query + '%'))
     else:
         # Show all service providers if no search query
-        c.execute('SELECT name, service_name, area, phone, amount, rating, comment, booking_option FROM service_providers')
+        c.execute('SELECT name, service_name, area, phone, amount, comment, booking_option FROM service_providers')
 
     providers = c.fetchall()
     conn.close()
@@ -30,7 +30,7 @@ def home():
 def filter_service(service):
     conn = sqlite3.connect('services.db')
     c = conn.cursor()
-    query = 'SELECT name, service_name, area, phone, amount, rating, comment, booking_option FROM service_providers WHERE field = ?'
+    query = 'SELECT name, service_name, area, phone, amount, comment, booking_option FROM service_providers WHERE field = ?'
     c.execute(query, (service,))
     filtered_providers = c.fetchall()
     conn.close()
@@ -51,7 +51,6 @@ def register():
         area = request.form.get('area')
         phone = request.form.get('phone')
         amount = request.form.get('amount')
-        rating = request.form.get('rating')
         comment = request.form.get('comment')
         booking_option = request.form.get('booking_option')
         field = request.form.get('field')
@@ -61,9 +60,9 @@ def register():
         c = conn.cursor()
 
         # Insert data into the service_providers table
-        query = '''INSERT INTO service_providers (name, service_name, area, phone, amount, rating, comment, booking_option, field)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'''
-        c.execute(query, (name, service_name, area, phone, amount, rating, comment, booking_option, field))
+        query = '''INSERT INTO service_providers (name, service_name, area, phone, amount, comment, booking_option, field)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)'''
+        c.execute(query, (name, service_name, area, phone, amount, comment, booking_option, field))
 
         conn.commit()
         conn.close()
@@ -82,7 +81,7 @@ def search():
 
     # Search query to match providers by name, service, area, or phone
     cursor.execute("""
-        SELECT name, service_name, area, phone, amount, rating, comment, booking_option
+        SELECT name, service_name, area, phone, amount, comment, booking_option
         FROM service_providers
         WHERE lower(name) LIKE ? OR lower(service_name) LIKE ? OR lower(area) LIKE ? OR lower(phone) LIKE ?
     """, (f"%{query}%", f"%{query}%", f"%{query}%", f"%{query}%"))
