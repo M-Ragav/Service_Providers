@@ -2,87 +2,99 @@ from flask import Flask, render_template, request, redirect, url_for
 import sqlite3
 
 app = Flask(__name__)
-data_storage =[]
 
-# Initialize the database
-def init_db():
-    with sqlite3.connect('data.db') as conn:
-        cursor = conn.cursor()
-        cursor.execute('''CREATE TABLE IF NOT EXISTS details (
-                            id INTEGER PRIMARY KEY,
-                            name TEXT,
-                            services TEXT,
-                            area TEXT,
-                            phone TEXT,
-                            fee TEXT,
-                            subscription TEXT,
-                            rating TEXT,
-                            booking_option TEXT
-                        )''')
-        conn.commit()
+# Route to render the homepage
+@app.route('/', methods=['GET'])
+def home():
+    query = request.args.get('query')  # Get search query from the form
+    conn = sqlite3.connect('services.db')
+    c = conn.cursor()
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+    if query:
+        # Search the service provider details
+        c.execute('''SELECT name, service_name, area, phone, amount, rating, comment, booking_option FROM service_providers 
+                     WHERE name LIKE ? OR service_name LIKE ? OR area LIKE ?''', 
+                     ('%' + query + '%', '%' + query + '%', '%' + query + '%'))
+    else:
+        # Show all service providers if no search query
+        c.execute('SELECT name, service_name, area, phone, amount, rating, comment, booking_option FROM service_providers')
 
+    providers = c.fetchall()
+    conn.close()
+    return render_template('home.html', providers=providers)
 
-@app.route('/submit', methods=['POST'])
-def submit():
-    name = request.form['name'].capitalize()
-    services = request.form['services'].capitalize()
-    area = request.form['area'].capitalize()
+# Route to filter services based on the selected field
+@app.route('/filter/<service>')
+def filter_service(service):
+    conn = sqlite3.connect('services.db')
+    c = conn.cursor()
+    query = 'SELECT name, service_name, area, phone, amount, rating, comment, booking_option FROM service_providers WHERE field = ?'
+    c.execute(query, (service,))
+    filtered_providers = c.fetchall()
+    conn.close()
+    return render_template('home.html', providers=filtered_providers)
+
+# Route to render the registration form
+@app.route('/register')
+def register_form():
+    return render_template('register.html')
+
+# Route to handle registration submission
+@app.route('/register', methods=['POST'])
+def register():
+    name = request.form['name']
+    service_name = request.form['service_name']
+    area = request.form['area']
     phone = request.form['phone']
-    fee = request.form['fee']
-    subscription = request.form['subscription']
+    amount = request.form['amount']
     rating = request.form['rating']
+    comment = request.form['comment']
     booking_option = request.form['booking_option']
+    field = request.form['field']
 
-    with sqlite3.connect('data.db') as conn:
-        cursor = conn.cursor()
-        cursor.execute('''INSERT INTO details (name, services, area, phone, fee, subscription, rating, booking_option) 
-                          VALUES (?, ?, ?, ?, ?, ?, ?, ?)''', 
-                          (name, services, area, phone, fee, subscription, rating, booking_option))
-        conn.commit()
-    
-    # Store the details (you might want to store this in a database)
-    details = {
-        'name': name,
-        'services': services,
-        'area': area,
-        'phone': phone,
-        'fee': fee,
-        'subscription': subscription,
-        'rating': rating,
-        'booking_option': booking_option
-    }
-    data_storage.append(details)
+    # Open a connection to the database
+    conn = sqlite3.connect('services.db')
+    c = conn.cursor()
 
-    return redirect(url_for('success', name=name))  # Redirect to the success page with name
+    # Insert data into the service_providers table
+    query = '''INSERT INTO service_providers (name, service_name, area, phone, amount, rating, comment, booking_option, field)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'''
+    c.execute(query, (name, service_name, area, phone, amount, rating, comment, booking_option, field))
 
+    conn.commit()
+    conn.close()
+
+    # After form submission, redirect to success page and then homepage
+    return redirect(url_for('success'))
+
+# Success page
 @app.route('/success')
 def success():
-    # Get the name from query parameters if needed
-    name = request.args.get('name')
-    return render_template('success.html', name=name, detail=data_storage[-1])  # Display the last submitted detail
+    return "<h3>Successfully submitted! Redirecting to home...</h3>"
 
 
-@app.route('/details')
-def details_page():
-    with sqlite3.connect('data.db') as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT id, name FROM details")
-        names = cursor.fetchall()
-    return render_template('details.html', names=names)
+@app.route('/search')
+def search():
+    query = request.args.get('query', '').lower()  # Get the search query, default to empty string if None
 
+    # Connect to the database
+    conn = sqlite3.connect('services.db')
+    cursor = conn.cursor()
 
-@app.route('/display/<int:detail_id>')
-def display_detail(detail_id):
-    with sqlite3.connect('data.db') as conn:
-        cursor = conn.cursor()
-        cursor.execute('SELECT * FROM details WHERE id = ?', (detail_id,))
-        detail = cursor.fetchone()
-    return render_template('display.html', detail=detail)
+    # Search query to match providers by name, service, area, or phone
+    cursor.execute("""
+        SELECT name, service_name, area, phone, amount, rating, comment, booking_option
+        FROM service_providers
+        WHERE lower(name) LIKE ? OR lower(service_name) LIKE ? OR lower(area) LIKE ? OR lower(phone) LIKE ?
+    """, (f"%{query}%", f"%{query}%", f"%{query}%", f"%{query}%"))
+
+    filtered_providers = cursor.fetchall()
+
+    # Close the connection
+    conn.close()
+
+    # Render the template with the filtered providers
+    return render_template('home.html', providers=filtered_providers)
 
 if __name__ == '__main__':
-    init_db()
     app.run(debug=True)
