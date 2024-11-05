@@ -1,7 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, flash
 import sqlite3
 
 app = Flask(__name__)
+import secrets
+app.secret_key = secrets.token_hex(16) 
 
 # Route to render the homepage
 @app.route('/', methods=['GET'])
@@ -39,39 +41,36 @@ def filter_service(service):
 def register_form():
     return render_template('register.html')
 
-# Route to handle registration submission
-@app.route('/register', methods=['POST'])
+
+@app.route('/register', methods=['GET', 'POST'])
 def register():
-    name = request.form['name']
-    service_name = request.form['service_name']
-    area = request.form['area']
-    phone = request.form['phone']
-    amount = request.form['amount']
-    rating = request.form['rating']
-    comment = request.form['comment']
-    booking_option = request.form['booking_option']
-    field = request.form['field']
+    if request.method == 'POST':
+        # Get form data
+        name = request.form.get('name')
+        service_name = request.form.get('service_name')
+        area = request.form.get('area')
+        phone = request.form.get('phone')
+        amount = request.form.get('amount')
+        rating = request.form.get('rating')
+        comment = request.form.get('comment')
+        booking_option = request.form.get('booking_option')
+        field = request.form.get('field')
 
-    # Open a connection to the database
-    conn = sqlite3.connect('services.db')
-    c = conn.cursor()
+         # Open a connection to the database
+        conn = sqlite3.connect('services.db')
+        c = conn.cursor()
 
-    # Insert data into the service_providers table
-    query = '''INSERT INTO service_providers (name, service_name, area, phone, amount, rating, comment, booking_option, field)
+        # Insert data into the service_providers table
+        query = '''INSERT INTO service_providers (name, service_name, area, phone, amount, rating, comment, booking_option, field)
                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'''
-    c.execute(query, (name, service_name, area, phone, amount, rating, comment, booking_option, field))
+        c.execute(query, (name, service_name, area, phone, amount, rating, comment, booking_option, field))
 
-    conn.commit()
-    conn.close()
+        conn.commit()
+        conn.close()
+        flash('Successfully submitted! You will be redirected to the home page in 3 seconds.')
+        return redirect(url_for('register', success=True))
 
-    # After form submission, redirect to success page and then homepage
-    return redirect(url_for('success'))
-
-# Success page
-@app.route('/success')
-def success():
-    return "<h3>Successfully submitted! Redirecting to home...</h3>"
-
+    return render_template('register.html')
 
 @app.route('/search')
 def search():
