@@ -52,10 +52,10 @@
         <!-- Displaying the list of service providers -->
         <div class="templates-container" id="templatesContainer">
             {% for provider in providers %}
-            <div class="template" onclick="openTemplateDetail('Name: {{ provider[0] }}\n Service: {{ provider[1]}}\n Area: {{ provider[2]}}\n Phone: {{ provider[3]}}\n Amount: {{ provider[4]}}\n Rating: {{ provider[5]}}\n Comment: {{ provider[6]}}\n Booking Option: {{ provider[7]}}\n ')">
+            <div class="template" onclick="openTemplateDetail('Name: {{ provider[0] }}\n Service: {{ provider[1]}}\n Area: {{ provider[2]}}\n Phone: {{ provider[3]}}\n Amount: {{ provider[4]}}\n Work: {{ provider[5]}}\n Booking Option: {{ provider[6]}}\n ')">
                 <h3>Name: {{ provider[0] }}</h3>
                 <p>Service: {{ provider[1] }}</p>
-                <p>Review: {{ provider[5]}}⭐</p>
+                <p>Work: {{ provider[5]}}</p>
             </div>
             {% endfor %}
         </div>
